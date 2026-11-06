@@ -1,0 +1,20 @@
+services:
+  freeswitch:
+    image: drachtio/drachtio-freeswitch-mrf:latest
+    container_name: ai-call-center-freeswitch
+    # Host networking: SIP/RTP need real addresses, no NAT through docker-proxy.
+    network_mode: host
+    restart: unless-stopped
+    # Bypass the image entrypoint: it opens the event socket to 0.0.0.0/0 with a default password.
+    entrypoint: ["freeswitch"]
+    command: ["-nc", "-nf", "-nonat", "-nonatmap"]
+    volumes:
+      - ./conf-rendered/vars_diff.xml:/usr/local/freeswitch/conf/vars_diff.xml:ro
+      - ./conf-rendered/switch.conf.xml:/usr/local/freeswitch/conf/autoload_configs/switch.conf.xml:ro
+      - ./conf-rendered/event_socket.conf.xml:/usr/local/freeswitch/conf/autoload_configs/event_socket.conf.xml:ro
+      - ./conf-rendered/acl.conf.xml:/usr/local/freeswitch/conf/autoload_configs/acl.conf.xml:ro
+      - ./conf-rendered/sip_profiles/mrf.xml:/usr/local/freeswitch/conf/sip_profiles/mrf.xml:ro
+      - ./conf-rendered/dialplan/mrf.xml:/usr/local/freeswitch/conf/dialplan/mrf.xml:ro
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "5" }
